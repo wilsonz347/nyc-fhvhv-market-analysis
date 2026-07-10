@@ -1,2 +1,0 @@
--- Build zone-hour level aggregate table from interim trip-level data.
--- TODO: Implement aggregation query.
