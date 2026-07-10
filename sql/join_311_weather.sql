@@ -1,2 +1,0 @@
--- Join 311 complaint and weather data onto zone-hour aggregates.
--- TODO: Implement join query.
