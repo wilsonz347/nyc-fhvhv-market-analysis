@@ -216,3 +216,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Reference files
+notebooks/reference/
+
+# DuckDB files
+*.wal
+*.tmp
+*.duckdb
+
+# Data files
+data/raw/fhvhv_tripdata_2026-*.parquet
