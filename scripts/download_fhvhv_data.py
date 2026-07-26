@@ -1,6 +1,10 @@
 """
 Incremental downloader for NYC TLC HVFHV trip data (Parquet files).
 
+Downloads:
+- Monthly HVFHV trip data (Parquet)
+- NYC Taxi Zone Lookup table (CSV)
+
 Features:
 - Skips files that already exist locally (incremental)
 - Validates existing files aren't partial/corrupt (via HTTP Content-Length check)
@@ -21,13 +25,41 @@ from pathlib import Path
 
 import requests
 
-BASE_URL = "https://d37ci6vzurychx.cloudfront.net/trip-data"
+TRIP_DATA_URL = "https://d37ci6vzurychx.cloudfront.net/trip-data"
+LOOKUP_URL = "https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv"
 RAW_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
+REFERENCE_DIR = Path(__file__).resolve().parent.parent / "data" / "reference"
 
 MAX_RETRIES = 3
 RETRY_BACKOFF_SECONDS = 5
 CHUNK_SIZE = 1024 * 1024  # 1 MB
 
+def download_lookup_table(summary, force=False):
+    """Download the NYC TLC taxi zone lookup table."""
+    filename = "taxi_zone_lookup.csv"
+    dest = REFERENCE_DIR / filename
+
+    print(f"\n{filename}")
+
+    if not force and file_is_valid(dest, LOOKUP_URL):
+        print("  Already exists and looks valid — skipping.")
+        summary["skipped"].append(filename)
+        return
+
+    if dest.exists():
+        print("  Existing file missing/incomplete/forced — re-downloading.")
+
+    print(f"  Downloading from {LOOKUP_URL} ...")
+
+    success = download_with_retries(LOOKUP_URL, dest)
+
+    if success:
+        size_kb = dest.stat().st_size / 1024
+        print(f"  Done ({size_kb:.1f} KB)")
+        summary["downloaded"].append(filename)
+    else:
+        print("  Failed after retries.")
+        summary["failed"].append(filename)
 
 def month_range(start: str, end: str) -> list[str]:
     """Generate a list of YYYY-MM strings from start to end, inclusive."""
@@ -101,7 +133,7 @@ def download_with_retries(url: str, dest: Path) -> bool:
 
 def main():
     # Parse command-line arguments
-    parser = argparse.ArgumentParser(description="Download NYC TLC HVFHV parquet files.")
+    parser = argparse.ArgumentParser(description="Download NYC TLC HVFHV trip data and reference datasets.")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--start", help="Start month, e.g. 2026-01 (use with --end)")
     group.add_argument("--months", nargs="+", help="Explicit list of months, e.g. 2026-01 2026-03")
@@ -115,12 +147,19 @@ def main():
     months = month_range(args.start, args.end) if args.start else args.months
 
     RAW_DIR.mkdir(parents=True, exist_ok=True)
+    REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
 
-    summary = {"skipped": [], "downloaded": [], "failed": []}
+    summary = {
+        "skipped": [],
+        "downloaded": [],
+        "failed": []
+    }
+
+    download_lookup_table(summary, force=args.force)
 
     for month in months:
         filename = f"fhvhv_tripdata_{month}.parquet"
-        url = f"{BASE_URL}/{filename}"
+        url = f"{TRIP_DATA_URL}/{filename}"
         dest = RAW_DIR / filename
 
         print(f"\n{filename}")
