@@ -227,6 +227,7 @@ notebooks/reference/
 
 # Data files
 data/raw/fhvhv_tripdata_2026-*.parquet
+data/reference/taxi_zone_lookup.csv
 
 # macOS
 .DS_Store
