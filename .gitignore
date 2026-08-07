@@ -226,6 +226,7 @@ notebooks/reference/
 *.duckdb
 
 # Data files
+data/raw/fhvhv_tripdata_2025-*.parquet
 data/raw/fhvhv_tripdata_2026-*.parquet
 data/reference/taxi_zone_lookup.csv
 
