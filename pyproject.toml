@@ -6,6 +6,17 @@ build-backend = "setuptools.build_meta"
 name = "nyc-fhvhv-analysis"
 version = "0.1.0"
 description = "NYC FHVHV demand analysis and forecasting"
+dependencies = [
+    "duckdb",
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "seaborn",
+    "statsmodels",
+    "pmdarima",
+    "scikit-learn",
+    "requests",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
